@@ -1,4 +1,3 @@
-# Creating model architecture.
 from hate.entity.config_entity import ModelTrainerConfig
 from keras.models import Sequential
 from keras.optimizers import RMSprop
