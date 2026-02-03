@@ -107,9 +107,6 @@ The model is designed to focus more on **recall for hate speech**, which is more
 - Uvicorn  
 - Jinja2 (HTML templating)
 
-### Frontend
-- HTML  
-- CSS  
 
 ### Tools & Environment
 - Git & GitHub  
