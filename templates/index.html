@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Hate Speech Detection</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+
+<div class="container">
+    <h1>🚨 Hate Speech Detection</h1>
+    <p>Check whether a sentence contains hate or abusive content.</p>
+
+    <form method="post" action="/predict-ui">
+        <textarea name="text" placeholder="Type something here..." required>
+{{ text if text else "" }}
+        </textarea>
+
+        <button type="submit">Analyze</button>
+    </form>
+
+    {% if result %}
+        {% if result == "hate and abusive" %}
+            <div class="result hate">🚫 Hate & Abusive Content Detected</div>
+        {% else %}
+            <div class="result safe">✅ No Hate Detected</div>
+        {% endif %}
+    {% endif %}
+</div>
+
+</body>
+</html>

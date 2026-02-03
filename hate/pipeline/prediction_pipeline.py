@@ -9,82 +9,71 @@ from hate.exception import CustomException
 from keras.utils import pad_sequences
 
 from hate.components.data_transforamation import DataTransformation
-from hate.entity.config_entity import DataTransformationConfig
-from hate.entity.artifact_entity import DataIngestionArtifacts
+from hate.entity.config_entity import (
+    DataTransformationConfig,
+    ModelTrainerConfig
+)
 
 
 class PredictionPipeline:
     def __init__(self):
         try:
-            # Local model paths
-            self.model_path = os.path.join(
-                "artifacts",
-                "trained_model",
-                "model.h5"
-            )
+            self.model_trainer_config = ModelTrainerConfig()
 
+            self.model_path = self.model_trainer_config.TRAINED_MODEL_PATH
             self.tokenizer_path = os.path.join(
-                "artifacts",
-                "trained_model",
+                os.path.dirname(self.model_path),
                 "tokenizer.pickle"
             )
 
-            # Only for text cleaning reuse
             self.data_transformation = DataTransformation(
                 data_transformation_config=DataTransformationConfig(),
                 data_ingestion_artifacts=None
             )
 
-            logging.info("PredictionPipeline initialized (local mode)")
+            logging.info(f"PredictionPipeline initialized")
+            logging.info(f"Model path: {self.model_path}")
+            logging.info(f"Tokenizer path: {self.tokenizer_path}")
 
         except Exception as e:
             raise CustomException(e, sys)
 
-    # -------------------------------------------------
-    # LOAD MODEL LOCALLY
-    # -------------------------------------------------
+
     def get_local_model(self) -> str:
-        """
-        Method Name :   get_local_model
-        Description :   Load trained model from local artifacts
-        Output      :   model_path
-        """
         try:
             if not os.path.isfile(self.model_path):
-                raise Exception("Trained model not found at local path")
+                raise Exception(
+                    f"Trained model not found at path: {self.model_path}"
+                )
 
-            logging.info("Local trained model found")
+            logging.info("Trained model found")
             return self.model_path
 
         except Exception as e:
             raise CustomException(e, sys)
 
-    # -------------------------------------------------
-    # PREDICT
-    # -------------------------------------------------
+  
     def predict(self, text):
-        logging.info("Running the predict function (local model)")
+        logging.info("Running prediction")
         try:
-            # Load model
             model_path = self.get_local_model()
             model = keras.models.load_model(model_path)
 
-            # Load tokenizer
+            if not os.path.isfile(self.tokenizer_path):
+                raise Exception("Tokenizer file not found")
+
             with open(self.tokenizer_path, "rb") as handle:
                 tokenizer = pickle.load(handle)
 
-            # Clean text using same transformation logic
             cleaned_text = self.data_transformation.concat_data_cleaning(text)
             cleaned_text = [cleaned_text]
 
-            # Tokenize & pad
             seq = tokenizer.texts_to_sequences(cleaned_text)
             padded = pad_sequences(seq, maxlen=MAX_LEN)
 
-            # Predict
             pred = model.predict(padded)
 
-            if pred[0][0] > 0.5:
+            if pred[0][0] >= 0.35:
                 return "hate and abusive"
             else:
                 return "no hate"
@@ -92,15 +81,8 @@ class PredictionPipeline:
         except Exception as e:
             raise CustomException(e, sys)
 
-    # -------------------------------------------------
-    # RUN PIPELINE
-    # -------------------------------------------------
     def run_pipeline(self, text):
-        logging.info("Entered the run_pipeline method of PredictionPipeline class")
         try:
-            predicted_text = self.predict(text)
-            logging.info("Exited the run_pipeline method of PredictionPipeline class")
-            return predicted_text
-
+            return self.predict(text)
         except Exception as e:
             raise CustomException(e, sys)
