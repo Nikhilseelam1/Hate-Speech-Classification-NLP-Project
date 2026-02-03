@@ -116,9 +116,21 @@ class DataTransformation:
 
             df = self.concat_dataframe()
 
+            df = df.dropna(subset=[self.data_transformation_config.TWEET])
+
+            df[self.data_transformation_config.TWEET] = (
+                df[self.data_transformation_config.TWEET]
+                .astype(str)
+                .str.strip()
+            )
+
+            df = df[df[self.data_transformation_config.TWEET] != ""]
+
             df[self.data_transformation_config.TWEET] = df[
                 self.data_transformation_config.TWEET
             ].apply(self.concat_data_cleaning)
+
+            logging.info(f"Transformed data shape: {df.shape}")
 
             os.makedirs(
                 self.data_transformation_config.DATA_TRANSFORMATION_ARTIFACTS_DIR,
